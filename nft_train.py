@@ -4,7 +4,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils import resample
 from sklearn.metrics import accuracy_score
-import joblib  # For saving the model
+import joblib
 
 # Load dataset
 df = pd.read_csv("NFT_Top_Collections_Final.csv")
@@ -13,8 +13,8 @@ df = pd.read_csv("NFT_Top_Collections_Final.csv")
 features = ["Volume", "Sales", "Owners", "Average_Price"]
 df = df.dropna(subset=features)
 
-# Balance the dataset
-df_yes = df[df["Market_Cap"] > df["Market_Cap"].quantile(0.75)]  # Use top 25% for "Yes"
+# Balance dataset
+df_yes = df[df["Market_Cap"] > df["Market_Cap"].quantile(0.75)]
 df_no = df[df["Market_Cap"] <= df["Market_Cap"].quantile(0.75)]
 df_no_upsampled = resample(df_no, replace=True, n_samples=len(df_yes), random_state=42)
 df_balanced = pd.concat([df_yes, df_no_upsampled])
@@ -38,8 +38,8 @@ model.fit(X_train, y_train)
 y_pred = model.predict(X_test)
 print("Model Accuracy:", accuracy_score(y_test, y_pred))
 
-# Save the trained model and scaler
+# Save model and scaler
 joblib.dump(model, "nft_model.pkl")
 joblib.dump(scaler, "scaler.pkl")
 
-print("Model and scaler saved successfully!")
+print("Model with probability prediction saved successfully!")

@@ -13,49 +13,33 @@ scaler = joblib.load("scaler.pkl")  # Ensure scaler is saved
 # Features used in the model
 features = ["Volume", "Sales", "Owners", "Average_Price"]
 
-# Define marketing strategies based on weaknesses
-def suggest_improvements(data):
-    suggestions = []
+# Function to determine risk level based on probability
+def get_risk_level(probability):
+    if probability >= 80:
+        return "Low Risk"
+    elif probability >= 50:
+        return "Medium Risk"
+    else:
+        return "High Risk"
+
+# Function to provide reasons why NFT is risky/successful
+def explain_prediction(probability, data):
+    explanations = []
     
-    if data["Volume"] < 5000:
-        suggestions.append("Increase trading volume by using promotional airdrops and collaborations.")
+    if probability < 50:
+        if data["Volume"] < 5000:
+            explanations.append("Low trading volume—consider increasing market visibility.")
+        if data["Sales"] < 500:
+            explanations.append("Few total sales—focus on increasing community adoption.")
+        if data["Owners"] < 200:
+            explanations.append("Low number of unique owners—expand marketing efforts.")
+        if data["Average_Price"] < 0.5:
+            explanations.append("NFTs are undervalued—adjust pricing strategy.")
 
-    if data["Sales"] < 500:
-        suggestions.append("Boost sales by offering limited-time discounts or exclusive perks.")
-
-    if data["Owners"] < 200:
-        suggestions.append("Grow community engagement through Discord & Twitter campaigns.")
-
-    if data["Average_Price"] < 0.5:
-        suggestions.append("Adjust pricing strategy. Consider dynamic pricing based on demand.")
-
-    return suggestions
-
-# Define best marketing strategies based on category
-def get_marketing_strategy(category):
-    if category in ["Art", "Digital Art"]:
-        return "Leverage Instagram and Twitter marketing, collaborate with digital artists."
-    elif category in ["Gaming", "Metaverse"]:
-        return "Engage in Discord communities, partner with gaming influencers, in-game events."
-    elif category in ["Collectibles", "PFP"]:
-        return "Use influencer marketing, NFT giveaways, and whitelist promotions."
-    elif category in ["Music", "Audio"]:
-        return "Use TikTok virality, collaborate with musicians, host NFT-based concerts."
     else:
-        return "Community engagement, targeted social media ads, partnerships with brands."
-
-# Define geographic targeting based on category
-def get_best_regions(category):
-    if category in ["Art", "Digital Art"]:
-        return ["USA", "Europe", "Japan"]
-    elif category in ["Gaming", "Metaverse"]:
-        return ["Southeast Asia", "USA", "South Korea"]
-    elif category in ["Collectibles", "PFP"]:
-        return ["USA", "Europe", "Middle East"]
-    elif category in ["Music", "Audio"]:
-        return ["USA", "Europe", "Latin America"]
-    else:
-        return ["Global"]
+        explanations.append("NFT collection shows strong market potential based on past trends.")
+    
+    return explanations
 
 @app.route('/predict-nft', methods=['POST'])
 def predict_nft():
@@ -79,19 +63,20 @@ def predict_nft():
         # Scale input features
         user_input_scaled = scaler.transform(user_input)
 
-        # Make prediction
-        prediction = model.predict(user_input_scaled)
-        result = "Yes" if prediction[0] == 1 else "No"
+        # Make prediction probability
+        probability = model.predict_proba(user_input_scaled)[0][1] * 100  # Convert to percentage
 
-        response = {"success_prediction": result}
+        # Determine risk level
+        risk_level = get_risk_level(probability)
 
-        # If prediction is "No", provide suggestions
-        if result == "No":
-            response["improvement_suggestions"] = suggest_improvements(data)
-            response["best_marketing_strategy"] = get_marketing_strategy(data.get("Category", "General"))
-            response["target_geographic_regions"] = get_best_regions(data.get("Category", "General"))
+        # Provide explanations
+        reasons = explain_prediction(probability, data)
 
-        return jsonify(response)
+        return jsonify({
+            "success_probability": f"{probability:.2f}%",
+            "risk_level": risk_level,
+            "analysis": reasons
+        })
 
     else:
         return jsonify({"error": "This API currently supports only existing collections. The new collection model is under development."}), 400
