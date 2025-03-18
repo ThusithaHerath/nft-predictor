@@ -1,48 +1,38 @@
 import pandas as pd
-import joblib
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.preprocessing import StandardScaler
 import xgboost as xgb
-from sklearn.metrics import accuracy_score
+import joblib
 
-# Load the dataset
+# Load dataset for new collections
 df = pd.read_csv("NFT_New_Collections_Updated.csv")
 
-# Define features and target
+# ✅ Ensure feature names match API expectations
 features = ["Category", "Roadmap_Strength", "Social_Media_Sentiment", "Whitelist_Count", "Marketing_Strategies"]
-target = "Success"  # 1 = Successful, 0 = Not Successful
 
-# Encode categorical values
-le_category = LabelEncoder()
-df["Category"] = le_category.fit_transform(df["Category"])
+# Encode categorical values (if necessary)
+df["Category"] = df["Category"].astype("category").cat.codes
+df["Marketing_Strategies"] = df["Marketing_Strategies"].astype("category").cat.codes
 
-le_marketing = LabelEncoder()
-df["Marketing_Strategies"] = le_marketing.fit_transform(df["Marketing_Strategies"])
+df = df.dropna(subset=features)  # Remove missing values
 
-# Define X (features) and y (target)
-X = df[features]
-y = df[target]
+# Target variable: Success probability
+y = df["Success"]
 
-# Standardize numerical features
+# Split dataset
+X_train, X_test, y_train, y_test = train_test_split(df[features], y, test_size=0.2, random_state=42)
+
+# Feature scaling
 scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
 
-# Split into train-test sets
-X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
+# Train XGBoost model
+model = xgb.XGBClassifier(n_estimators=200, learning_rate=0.05, max_depth=5, eval_metric="logloss")
+model.fit(X_train_scaled, y_train)
 
-# Train the XGBoost model
-model = xgb.XGBClassifier(n_estimators=100, learning_rate=0.05, max_depth=3, use_label_encoder=False, eval_metric="logloss")
-model.fit(X_train, y_train)
-
-# Evaluate accuracy
-y_pred = model.predict(X_test)
-accuracy = accuracy_score(y_test, y_pred)
-print("New NFT Model Accuracy:", accuracy)
-
-# Save trained model & encoders
+# Save model and scaler
 joblib.dump(model, "nft_new_model.pkl")
 joblib.dump(scaler, "scaler_new.pkl")
-joblib.dump(le_category, "category_encoder.pkl")
-joblib.dump(le_marketing, "marketing_encoder.pkl")
 
-print("✅ New NFT Model Trained & Saved Successfully!")
+print("✅ New NFT Model Trained & Saved Successfully with Correct Feature Names!")
