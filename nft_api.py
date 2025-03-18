@@ -7,7 +7,7 @@ app = Flask(__name__)
 
 # Load dataset and trained model
 df = pd.read_csv("NFT_Top_Collections_Final.csv")
-model = joblib.load("nft_model.pkl")  # Ensure this file is saved from nft_train.py
+model = joblib.load("nft_xgb_model_optimized.pkl") # Ensure this file is saved from nft_train.py
 scaler = joblib.load("scaler.pkl")  # Ensure scaler is saved
 
 # Features used in the model
