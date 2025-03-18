@@ -7,11 +7,11 @@ app = Flask(__name__)
 
 # Load dataset and trained model
 df = pd.read_csv("NFT_Top_Collections_Final.csv")
-model = joblib.load("nft_xgb_model_optimized.pkl") # Ensure this file is saved from nft_train.py
+model = joblib.load("nft_xgb_model_optimized.pkl")  # Ensure this file is saved from nft_train.py
 scaler = joblib.load("scaler.pkl")  # Ensure scaler is saved
 
 # Features used in the model
-features = ["Volume", "Sales", "Owners", "Average_Price"]
+expected_features = ["Volume", "Sales", "Owners", "Average_Price", "NFT_Retention_Rate", "NFT_Price_Fluctuation", "Liquidity_Ratio"]
 
 # Function to determine risk level based on probability
 def get_risk_level(probability):
@@ -35,7 +35,6 @@ def explain_prediction(probability, data):
             explanations.append("Low number of unique owners—expand marketing efforts.")
         if data["Average_Price"] < 0.5:
             explanations.append("NFTs are undervalued—adjust pricing strategy.")
-
     else:
         explanations.append("NFT collection shows strong market potential based on past trends.")
     
@@ -53,12 +52,22 @@ def predict_nft():
 
     if collection_type == "existing":
         # Ensure all necessary fields are present
-        missing_fields = [f for f in features if f not in data]
+        missing_fields = [f for f in expected_features[:4] if f not in data]
         if missing_fields:
             return jsonify({"error": f"Missing fields: {', '.join(missing_fields)}"}), 400
 
+        # Compute additional features dynamically
+        volume = float(data["Volume"])
+        sales = float(data["Sales"])
+        owners = float(data["Owners"])
+        avg_price = float(data["Average_Price"])
+        nft_retention_rate = (owners / sales) if sales > 0 else 0
+        liquidity_ratio = (sales / volume) if volume > 0 else 0
+        nft_price_fluctuation = ((avg_price - 0.01) / avg_price) if avg_price > 0 else 0
+
         # Convert input data into a DataFrame
-        user_input = pd.DataFrame([[data[f] for f in features]], columns=features)
+        user_input = pd.DataFrame([[volume, sales, owners, avg_price, nft_retention_rate, nft_price_fluctuation, liquidity_ratio]], 
+                                  columns=expected_features)
 
         # Scale input features
         user_input_scaled = scaler.transform(user_input)
