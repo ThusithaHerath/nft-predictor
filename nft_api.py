@@ -73,15 +73,15 @@ def recommend_marketing_strategies(data, is_existing):
 
     else:
         # 🔹 Strategies for New Collections
-        if data.get("Social_Media_Sentiment", 1) < 0.9:
+        if data.get("Social_Media_Sentiment", 1) <= 0.9:
             strategies.append("Improve community engagement via Twitter & Discord.")
             reasons.append("Your project has moderate social media sentiment, indicating room for improvement.")
 
-        if data.get("Whitelist_Count", 9999) < 500:
+        if data.get("Whitelist_Count", 9999) <= 500:
             strategies.append("Increase presale access & airdrop campaigns.")
             reasons.append("A relatively low whitelist count suggests fewer early supporters.")
 
-        if data.get("Roadmap_Strength", 9999) < 9:
+        if data.get("Roadmap_Strength", 9999) <= 9:
             strategies.append("Enhance the project roadmap to build investor confidence.")
             reasons.append("Your roadmap strength is decent but could be improved for long-term success.")
 
