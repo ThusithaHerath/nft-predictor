@@ -7,14 +7,12 @@ import joblib
 # Load dataset for new collections
 df = pd.read_csv("NFT_New_Collections_Updated.csv")
 
-# ✅ Ensure feature names match API expectations
-features = ["Category", "Roadmap_Strength", "Social_Media_Sentiment", "Whitelist_Count", "Marketing_Strategies"]
+features = ["Category", "Roadmap_Strength", "Social_Media_Sentiment", "Whitelist_Count"]
 
 # Encode categorical values (if necessary)
 df["Category"] = df["Category"].astype("category").cat.codes
-df["Marketing_Strategies"] = df["Marketing_Strategies"].astype("category").cat.codes
 
-df = df.dropna(subset=features)  # Remove missing values
+df = df.dropna(subset=features + ["Success"])  # Ensure no missing values
 
 # Target variable: Success probability
 y = df["Success"]
@@ -35,4 +33,4 @@ model.fit(X_train_scaled, y_train)
 joblib.dump(model, "nft_new_model.pkl")
 joblib.dump(scaler, "scaler_new.pkl")
 
-print("✅ New NFT Model Trained & Saved Successfully with Correct Feature Names!")
+print("✅ New NFT Model Trained & Saved Successfully Without!")
