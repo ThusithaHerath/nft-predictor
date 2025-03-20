@@ -3,8 +3,12 @@ import pandas as pd
 import numpy as np
 import joblib
 import logging
+from flask_cors import CORS  # Import CORS
+
 
 app = Flask(__name__)
+CORS(app, resources={r"/predict-nft": {"origins": "*"}})
+
 
 # Load trained models and scalers
 existing_model = joblib.load("nft_xgb_model_optimized.pkl")
